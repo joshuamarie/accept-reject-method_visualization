@@ -1,0 +1,66 @@
+name: Deploy to shinyapps.io
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Set up R pipebind operator ('=>')
+    env:
+        _R_USE_PIPEBIND_: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+            r-version: "4.5"
+
+      # - name: Set up R pipebind operator
+      #   run: |
+      #       Sys.setenv("_R_USE_PIPEBIND_" = TRUE)
+      #   shell: Rscript {0}
+
+      - name: Install necessary R packages
+        run: |
+            install.packages(c(
+                # Main package for modularity
+                "box",
+
+                # tidyverse suite
+                "tidyverse", "scales",
+
+                # Shiny framework suite
+                "shiny", "leaflet", "bslib", "ggiraph", "DT",
+
+                # Deployment
+                "rsconnect",
+
+                # Miscellaneous
+                "dqrng"
+            ))
+        shell: Rscript {0}
+
+      - name: Deploy to shinyapps.io
+        env:
+            SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+            SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+            SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+        run: |
+            rsconnect::setAccountInfo(
+                name = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                token = Sys.getenv("SHINYAPPS_TOKEN"),
+                secret = Sys.getenv("SHINYAPPS_SECRET")
+            )
+            rsconnect::deployApp(
+                appDir = ".",
+                appName = "dengue-surveillance",
+                forceUpdate = TRUE
+            )
+        shell: Rscript {0}
