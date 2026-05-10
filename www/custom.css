@@ -41,7 +41,11 @@
     transition: box-shadow 0.2s ease;
 }
 
-.bslib-sidebar-layout > .sidebar {
+[data-bs-theme="dark"] .bslib-sidebar-layout > .sidebar {
     background-color: #1e3a5f !important;
-    color: #fff;
+    color: #fff !important;
+}
+
+[data-bs-theme="light"] .bslib-sidebar-layout > .sidebar {
+    background-color: #E8EDF2 !important;
 }
