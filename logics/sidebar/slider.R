@@ -1,15 +1,13 @@
 box::use(
-    shiny[NS, tagList, tags, sliderInput, textInput, uiOutput],
-    bslib[input_dark_mode]
+    shiny[NS, tagList, tags, sliderInput, textInput, uiOutput]
 )
 
 #' @export
 ui = function(ns) {
     tagList(
         tags$div(
-            class = "d-flex justify-content-between align-items-center mb-3",
-            tags$h5(class = "mb-0 fw-bold", "A/R Sampling Visualizer"),
-            input_dark_mode(id = ns("dark_mode"), mode = "light")
+            class = "mb-3",
+            tags$h5(class = "mb-0 fw-bold", "A/R Sampling Visualizer")
         ),
         tags$div(
             class = "kpi-grid mb-3",
