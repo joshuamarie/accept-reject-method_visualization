@@ -7,10 +7,11 @@ box::use(
         layout_sidebar, sidebar
     ],
     dplyr[keep_when = filter, mutate, tbl = tibble],
+    ggtext[element_markdown],
     ggplot2[
         ggplot, aes, geom_point, geom_density, scale_color_manual,
         labs, theme_minimal, theme, element_text, element_rect, margin,
-        coord_cartesian
+        coord_cartesian, element_blank, element_line, scale_shape_manual
     ],
     readr[write_csv],
     scales[comma],
@@ -104,26 +105,64 @@ server = function(id) {
 
         output$plot = renderPlot(bg = "transparent", {
             req(sample_data())
+            fg = session$clientData[["output_sampler-plot_fg"]]
+            fg = if (is.null(fg)) "black" else {
+                vals = as.integer(regmatches(fg, gregexpr("[0-9]+", fg))[[1]])
+                grDevices::rgb(vals[1], vals[2], vals[3], maxColorValue = 255)
+            }
+
             ggplot(sample_data(), aes(x = x, y = y, color = status)) +
-                geom_point(alpha = 0.45, size = 0.9) +
+                geom_point(aes(shape = status), alpha = 0.97, size = 3.5, stroke = 1.3) +
                 scale_color_manual(
-                    values = c("accepted" = "#2166ac", "rejected" = "#d6604d")
+                    values = c(
+                        "accepted" = "#093C5D",
+                        "rejected" = "#7F2020"
+                    )
+                ) +
+                scale_shape_manual(
+                    values = c(
+                        "accepted" = "\u25CF",
+                        "rejected" = "\u25A0"
+                    )
+                    # guide = "none"
                 ) +
                 coord_cartesian(xlim = input$plotrange) +
-                labs(x = NULL, y = NULL, color = NULL) +
-                ar_theme()
+                labs(
+                    title = "**Accept-Reject Sampling**",
+                    subtitle = "<span style='color:#2166ac'>&#9679; accepted</span> &nbsp; <span style='color:#d6604d'>&#9632; rejected</span>",
+                    x = NULL, y = NULL, color = NULL
+                ) +
+                ar_theme() +
+                theme(
+                    plot.title = element_markdown(size = 13, color = fg),
+                    plot.subtitle = element_markdown(size = 11),
+                    legend.position = "none",
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_line(linewidth = 0.3, color = "grey85")
+                )
         })
 
         output$plot2 = renderPlot(bg = "transparent", {
             req(sample_data())
+            fg = session$clientData[["output_sampler-plot_fg"]]
+            fg = if (is.null(fg)) "black" else {
+                vals = as.integer(regmatches(fg, gregexpr("[0-9]+", fg))[[1]])
+                grDevices::rgb(vals[1], vals[2], vals[3], maxColorValue = 255)
+            }
+
             ggplot(
                 keep_when(sample_data(), status == "accepted"),
                 aes(x = x)
             ) +
-                geom_density(fill = "#2166ac", alpha = 0.35, color = "#2166ac") +
+                geom_density(fill = "#2166ac", alpha = 0.2, color = "#2166ac", linewidth = 0.8) +
                 coord_cartesian(xlim = input$plotrange) +
-                labs(title = "Density of accepted samples", x = NULL, y = NULL) +
-                ar_theme()
+                labs(title = "**Density** of accepted samples", x = NULL, y = NULL) +
+                ar_theme() +
+                theme(
+                    plot.title = element_markdown(size = 13, color = fg),
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_line(linewidth = 0.3, color = "grey85")
+                )
         })
 
         output$summary = renderTable(
