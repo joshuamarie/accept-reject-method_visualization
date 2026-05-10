@@ -1,13 +1,10 @@
 box::use(
     shiny[
         NS, moduleServer, eventReactive, renderPlot, renderUI,
-        renderTable, downloadHandler, req, tagList, sliderInput,
-        uiOutput, textInput, tags, numericInput, plotOutput,
-        tableOutput, downloadButton, icon, actionButton
+        renderTable, downloadHandler, req, tagList, tags
     ],
     bslib[
-        layout_sidebar, sidebar, card, card_body,
-        navset_tab, nav_panel, input_dark_mode
+        layout_sidebar, sidebar
     ],
     dplyr[keep_when = filter, mutate, tbl = tibble],
     ggplot2[
@@ -18,6 +15,9 @@ box::use(
     readr[write_csv],
     scales[comma],
 
+    ./mainbar/panels,
+    ./sidebar/slider,
+    ./sidebar/tabpanels,
     ./core/sampler,
     ./core/params,
     pdf_parser = ./core/pdf_parser
@@ -39,126 +39,14 @@ ui = function(id) {
     ns = NS(id)
 
     layout_sidebar(
+        # ---- Sidebar Content ----
         sidebar = sidebar(
             width = 300,
-            tags$div(
-                class = "d-flex justify-content-between align-items-center mb-3",
-                tags$h5(class = "mb-0 fw-bold", "A/R Sampling Visualizer"),
-                input_dark_mode(id = ns("dark_mode"), mode = "light")
-            ),
-            tags$div(
-                class = "kpi-grid mb-3",
-                tags$div(
-                    class = "kpi-box",
-                    tags$div(class = "kpi-label", "Accepted"),
-                    uiOutput(ns("kpi_accepted"))
-                ),
-                tags$div(
-                    class = "kpi-box",
-                    tags$div(class = "kpi-label", "A/R Ratio"),
-                    uiOutput(ns("kpi_ratio"))
-                )
-            ),
-            tags$hr(),
-            sliderInput(
-                ns("sample_size"),
-                "Sample size",
-                min = 0,
-                max = 1e4,
-                value = 1000,
-                step = 50
-            ),
-            tags$hr(),
-            textInput(
-                ns("pdf"),
-                "Target PDF f(x)",
-                value = "1 - abs(x)"
-            ),
-            tags$small(
-                class = "text-muted",
-                "e.g. ", tags$code("1/(2*0.5)*exp(-abs(x)/0.5)"),
-                tags$br(), "Laplace(0, 0.5)"
-            ),
-            tags$hr(),
-            tags$p(class = "fw-semibold mb-2", "Proposal distribution"),
-            navset_tab(
-                id = ns("tabset"),
-                nav_panel(
-                    "Uniform",
-                    numericInput(ns("Munif"), "Blow-up factor M", 2),
-                    sliderInput(
-                        ns("uni_range"),
-                        "Range",
-                        min = -10,
-                        max = 10,
-                        value = c(-1, 1)
-                    )
-                ),
-                nav_panel(
-                    "Gaussian",
-                    numericInput(ns("Mnormal"), "Blow-up factor M", 1),
-                    numericInput(ns("mu"), "Mean", 0),
-                    numericInput(ns("sigma"), "Std. deviation", 1)
-                ),
-                nav_panel(
-                    "Gamma",
-                    numericInput(ns("Mgamma"), "Blow-up factor M", 1),
-                    numericInput(ns("shape"), "Shape", 1),
-                    numericInput(ns("scale"), "Scale", 1)
-                )
-            ),
-            tags$hr()
+            slider$ui(ns),
+            tabpanels$ui(ns)
         ),
-        card(
-            full_screen = TRUE,
-            card_body(
-                navset_tab(
-                    id = ns("main_tabs"),
-                    nav_panel(
-                        title = tagList(icon("circle-dot"), "Accept-Reject"),
-                        value = "accept_reject",
-                        plotOutput(ns("plot"), height = "500px")
-                    ),
-                    nav_panel(
-                        title = tagList(icon("chart-area"), "Density"),
-                        value = "density",
-                        plotOutput(ns("plot2"), height = "500px")
-                    ),
-                    nav_panel(
-                        title = tagList(icon("table-list"), "Summary"),
-                        value = "summary",
-                        tableOutput(ns("summary"))
-                    )
-                ),
-                actionButton(
-                    ns("go"),
-                    label = tagList(icon("play"), "Sample new data"),
-                    class = "btn btn-primary btn-sample w-100 mt-2"
-                ),
-                sliderInput(
-                    ns("plotrange"),
-                    "x-axis range",
-                    min = -10,
-                    max = 10,
-                    value = c(-2, 2),
-                    step = 0.1
-                ),
-                tags$div(
-                    class = "d-flex gap-2 align-items-center",
-                    textInput(
-                        ns("filename"),
-                        label = NULL,
-                        placeholder = "filename",
-                        value = "filename"
-                    ),
-                    downloadButton(
-                        ns("downloadData"),
-                        "Download CSV",
-                        class = "btn btn-outline-primary btn-sm"
-                    )
-                )
-            )
-        )
+        # ---- Main Panel ----
+        panels$ui(ns)
     )
 }
 
