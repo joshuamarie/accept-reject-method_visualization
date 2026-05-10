@@ -43,7 +43,7 @@ jobs:
                 "rsconnect",
 
                 # Miscellaneous
-                "dqrng"
+                "dqrng", "ggtext"
             ))
         shell: Rscript {0}
 
